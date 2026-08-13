@@ -3,142 +3,139 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#6d3ed2" />
-    <meta name="description" content="紫色数学刷题应用：308道题、逐题解析、计时与本地进度保存。" />
-    <title>紫藤数学刷题</title>
+    <meta name="theme-color" content="#5f3bbf" />
+    <meta name="description" content="308道数学专项练习，支持逐题解析、错题回练、计时、保留进度和跨设备同步。" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://awvmsvxzsphxfzluunwh.supabase.co; img-src 'self' data:; style-src 'self'; script-src 'self'; manifest-src 'self';" />
+    <title>紫藤数学刷题站</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-one" aria-hidden="true"></div>
-    <div class="ambient ambient-two" aria-hidden="true"></div>
-
-    <div id="welcome" class="welcome-shell">
-      <section class="welcome-card" aria-labelledby="welcome-title">
-        <div class="welcome-mark" aria-hidden="true">∑</div>
-        <p class="eyebrow">308 道数学专项练习</p>
-        <h1 id="welcome-title">紫藤数学刷题</h1>
-        <p class="welcome-copy">每道题提交后立即显示解析，答题进度和用时自动保存在当前设备。</p>
-        <div class="welcome-stats" aria-label="题库特点">
-          <div><strong>14</strong><span>题型覆盖</span></div>
-          <div><strong>100%</strong><span>逐题解析</span></div>
-          <div><strong>自动</strong><span>保存进度</span></div>
-        </div>
-        <button id="startButton" class="primary-button welcome-button" type="button">开始答题</button>
-        <button id="installWelcome" class="text-button is-hidden" type="button">安装到桌面</button>
-        <p class="welcome-note">无需登录 · 手机和电脑都能使用</p>
-      </section>
-    </div>
-
-    <div id="app" class="app-shell is-hidden">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="返回首页">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="./" aria-label="紫藤数学刷题站首页">
           <span class="brand-mark" aria-hidden="true">∑</span>
-          <span><strong>紫藤数学</strong><small>专注刷题 · 稳步进阶</small></span>
+          <span>
+            <strong>紫藤数学刷题站</strong>
+            <small>专项练习｜自动保存｜错题回练｜同步进度</small>
+          </span>
         </a>
 
-        <div class="timer-dock" aria-label="答题计时器">
-          <span class="timer-icon" aria-hidden="true">◷</span>
-          <span><small>本次答题</small><strong id="timer">00:00:00</strong></span>
-          <button id="timerToggle" class="icon-button" type="button" aria-label="暂停计时">Ⅱ</button>
+        <div class="header-actions">
+          <div class="timer" aria-label="答题计时器">
+            <span aria-hidden="true">◷</span>
+            <strong id="timer">00:00:00</strong>
+            <button id="timerToggle" type="button">暂停</button>
+            <button id="timerReset" type="button">重置</button>
+          </div>
+          <button id="mobilePanelToggle" class="mobile-panel-toggle" type="button" aria-controls="sidebar" aria-expanded="false">题目与同步</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside id="sidebar" class="sidebar" aria-label="练习设置与题目导航">
+        <div class="sidebar-head">
+          <strong>练习面板</strong>
+          <button id="closeSidebar" type="button" aria-label="关闭练习面板">×</button>
         </div>
 
-        <div class="top-actions">
-          <button id="installButton" class="soft-button is-hidden" type="button">安装到桌面</button>
-          <button id="saveButton" class="soft-button" type="button"><span aria-hidden="true">✓</span> 保存退出</button>
-        </div>
-      </header>
+        <section class="stats-grid" aria-label="练习统计">
+          <div class="stat"><strong id="statDone">0</strong><span>已作答</span></div>
+          <div class="stat"><strong id="statAccuracy">—</strong><span>正确率</span></div>
+          <div class="stat"><strong id="statWrong">0</strong><span>错题</span></div>
+          <div class="stat"><strong id="statFavorite">0</strong><span>收藏</span></div>
+        </section>
 
-      <main class="workspace">
-        <aside class="sidebar" aria-label="学习概览与筛选">
-          <section class="progress-card">
-            <div class="progress-ring" id="progressRing" style="--progress: 0deg">
-              <div><strong id="progressPercent">0%</strong><span>已完成</span></div>
-            </div>
-            <div class="progress-copy">
-              <p>总进度</p>
-              <strong><span id="doneCount">0</span> / 308</strong>
-              <span id="correctSummary">答对 0 题</span>
+        <section class="control-section">
+          <label for="modeSelect">练习模式</label>
+          <select id="modeSelect">
+            <option value="all">全部题目</option>
+            <option value="todo">待完成</option>
+            <option value="wrong">错题回练</option>
+            <option value="favorite">收藏题目</option>
+          </select>
+
+          <label for="topicSelect">题型筛选</label>
+          <select id="topicSelect"><option value="ALL">全部题型</option></select>
+
+          <div class="order-actions">
+            <button id="shuffleButton" type="button">随机顺序</button>
+            <button id="resetOrderButton" type="button">顺序刷题</button>
+          </div>
+        </section>
+
+        <section class="progress-section" aria-label="当前练习进度">
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <div class="progress-line"><span id="progressText">1 / 308</span><span id="saveTime">尚未作答</span></div>
+        </section>
+
+        <section class="sync-section" aria-labelledby="syncTitle">
+          <div class="section-title"><strong id="syncTitle">手机与电脑同步</strong><span id="syncStatus">仅本机保存</span></div>
+          <div class="sync-row">
+            <input id="syncCode" type="text" maxlength="64" placeholder="输入至少8位同步码" autocomplete="off" aria-label="同步码" />
+            <button id="syncButton" type="button">同步</button>
+          </div>
+          <div class="sync-tools">
+            <button id="generateSyncCode" type="button">生成同步码</button>
+            <span>两台设备输入同一个码即可恢复进度</span>
+          </div>
+        </section>
+
+        <section class="navigator-section" aria-labelledby="navigatorTitle">
+          <div class="section-title"><strong id="navigatorTitle">题号导航</strong><span>点击题号跳转</span></div>
+          <div id="questionGrid" class="question-grid"></div>
+          <div class="legend"><span><i class="done"></i>已完成</span><span><i class="wrong"></i>错题</span><span><i class="current"></i>当前</span></div>
+        </section>
+      </aside>
+
+      <div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+      <section class="quiz-column" aria-live="polite">
+        <article id="questionCard" class="question-card">
+          <div class="question-top">
+            <div class="badges"><span id="topicBadge" class="badge">数学专项</span></div>
+            <span id="questionNumber" class="question-number">题库第 1 题 · 当前 1/308</span>
+          </div>
+
+          <h1 id="questionText" class="question-text"></h1>
+          <div id="options" class="options" role="radiogroup" aria-label="答案选项"></div>
+
+          <section id="resultPanel" class="result-panel is-hidden" aria-live="polite">
+            <div id="resultSummary" class="result-summary"></div>
+            <div class="analysis">
+              <strong>答案解析</strong>
+              <p id="analysisText"></p>
             </div>
           </section>
 
-          <nav class="filter-nav" aria-label="题目状态筛选">
-            <button class="filter-button is-active" data-filter="all" type="button"><span>全部题目</span><b id="allCount">308</b></button>
-            <button class="filter-button" data-filter="todo" type="button"><span>待完成</span><b id="todoCount">308</b></button>
-            <button class="filter-button" data-filter="wrong" type="button"><span>错题本</span><b id="wrongCount">0</b></button>
-            <button class="filter-button" data-filter="favorite" type="button"><span>已收藏</span><b id="favoriteCount">0</b></button>
-          </nav>
-
-          <div class="field-group">
-            <label for="topicSelect">按题型练习</label>
-            <select id="topicSelect"><option value="all">全部题型</option></select>
+          <div class="question-actions">
+            <button id="prevButton" class="secondary-button" type="button">← 上一题</button>
+            <button id="favoriteButton" class="secondary-button" type="button">☆ 收藏</button>
+            <button id="retryButton" class="secondary-button" type="button">跳过</button>
+            <span class="action-spacer"></span>
+            <button id="submitButton" class="submit-button" type="button" disabled>提交答案</button>
+            <button id="nextButton" class="primary-button" type="button">下一题 →</button>
           </div>
 
-          <button id="openNavigator" class="outline-button" type="button">打开题目导航</button>
+          <div class="keyboard-hint">快捷键：<kbd>1-4</kbd> 选 A-D　<kbd>Enter</kbd> 提交　<kbd>←</kbd><kbd>→</kbd> 切题　<kbd>F</kbd> 收藏</div>
+        </article>
 
-          <div class="save-note"><span id="savePulse" aria-hidden="true"></span><span id="saveStatus">进度已自动保存</span></div>
-        </aside>
-
-        <section class="quiz-column" aria-live="polite">
-          <div id="emptyState" class="empty-card is-hidden">
-            <span aria-hidden="true">✓</span>
-            <h2>这个分类暂时没有题目</h2>
-            <p>可以换一个筛选条件，继续练习。</p>
-            <button id="clearFilters" class="primary-button" type="button">查看全部题目</button>
-          </div>
-
-          <article id="questionCard" class="question-card">
-            <div class="question-head">
-              <div>
-                <span id="topicBadge" class="topic-badge">方程应用</span>
-                <span id="questionNumber" class="question-number">第 1 题 / 共 308 题</span>
-              </div>
-              <button id="favoriteButton" class="favorite-button" type="button" aria-label="收藏本题" aria-pressed="false">☆</button>
-            </div>
-
-            <div class="question-body">
-              <p id="questionText" class="question-text"></p>
-              <div id="options" class="options" role="radiogroup" aria-label="答案选项"></div>
-            </div>
-
-            <section id="resultPanel" class="result-panel is-hidden" aria-live="polite">
-              <div id="resultTitle" class="result-title"></div>
-              <div class="analysis-box">
-                <div class="analysis-heading"><span aria-hidden="true">✦</span><strong>答案解析</strong></div>
-                <p id="analysisText"></p>
-              </div>
-            </section>
-
-            <div class="question-actions">
-              <button id="prevButton" class="nav-button" type="button">← 上一题</button>
-              <button id="submitButton" class="primary-button" type="button" disabled>提交答案</button>
-              <button id="nextButton" class="nav-button" type="button">下一题 →</button>
-            </div>
-          </article>
+        <section id="emptyState" class="empty-state is-hidden">
+          <strong>这个筛选条件下暂时没有题目</strong>
+          <p>可以切换练习模式或题型筛选继续练习。</p>
+          <button id="showAllButton" type="button">查看全部题目</button>
         </section>
-      </main>
+      </section>
+    </main>
 
-      <nav class="mobile-bar" aria-label="移动端题目导航">
-        <button id="mobilePrev" type="button"><span>←</span><small>上一题</small></button>
-        <button id="mobileNavigator" type="button"><span>▦</span><small>题目</small></button>
-        <button id="mobileNext" type="button"><span>→</span><small>下一题</small></button>
-      </nav>
-    </div>
-
-    <div id="navigatorBackdrop" class="modal-backdrop is-hidden" aria-hidden="true"></div>
-    <section id="navigatorModal" class="navigator-modal is-hidden" role="dialog" aria-modal="true" aria-labelledby="navigatorTitle">
-      <div class="navigator-head">
-        <div><p class="eyebrow">快速跳转</p><h2 id="navigatorTitle">题目导航</h2></div>
-        <button id="closeNavigator" class="icon-button large" type="button" aria-label="关闭题目导航">×</button>
-      </div>
-      <div class="navigator-tools">
-        <input id="navigatorSearch" type="search" placeholder="搜索题号或题干关键词" aria-label="搜索题目" />
-        <div class="legend"><span><i class="dot done"></i>已完成</span><span><i class="dot wrong"></i>错题</span><span><i class="dot current"></i>当前</span></div>
-      </div>
-      <div id="questionGrid" class="question-grid"></div>
-    </section>
+    <nav class="mobile-nav" aria-label="移动端答题导航">
+      <button id="mobilePrev" type="button">←<span>上一题</span></button>
+      <button id="mobilePanel" type="button">▦<span>题目</span></button>
+      <button id="mobileNext" type="button">→<span>下一题</span></button>
+    </nav>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 

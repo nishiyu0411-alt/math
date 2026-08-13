@@ -1,12 +1,12 @@
 {
-  "name": "紫藤数学刷题",
+  "name": "紫藤数学刷题站",
   "short_name": "紫藤数学",
-  "description": "308道数学练习，逐题解析、计时和本地进度保存。",
+  "description": "308道数学练习，支持逐题解析、错题回练、计时、保留进度和跨设备同步。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f3ff",
-  "theme_color": "#6d3ed2",
+  "background_color": "#f7f4fc",
+  "theme_color": "#5f3bbf",
   "orientation": "any",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
