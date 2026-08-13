@@ -50,6 +50,7 @@
     syncButton: $("syncButton"),
     generateSyncCode: $("generateSyncCode"),
     syncStatus: $("syncStatus"),
+    clearAll: $("clearAllButton"),
     questionGrid: $("questionGrid"),
     questionCard: $("questionCard"),
     emptyState: $("emptyState"),
@@ -571,6 +572,30 @@
     showToast("同步码已生成，请在手机和电脑输入同一个码");
   }
 
+  async function clearAllData() {
+    const confirmed = window.confirm("确定清除所有数学刷题数据吗？\n\n已答题目、错题、收藏、当前位置和计时都会归零，并同步到手机和电脑。此操作不能撤销。");
+    if (!confirmed) return;
+
+    const syncCode = state.syncCode;
+    state = defaultState();
+    state.syncCode = syncCode;
+    state.timerRunning = false;
+    state.lastTick = Date.now();
+    elements.mode.value = "all";
+    elements.topic.value = "ALL";
+    elements.syncCode.value = syncCode;
+    save({ cloud: false });
+    render();
+    closeSidebar();
+
+    if (syncCode.length >= 8) {
+      const synced = await pushCloud(false);
+      showToast(synced ? "所有刷题数据已清除，并已同步到其他设备" : "本机数据已清除，云同步暂时失败");
+    } else {
+      showToast("所有数学刷题数据已清除");
+    }
+  }
+
   elements.mode.addEventListener("change", () => enterMode(elements.mode.value));
   elements.topic.addEventListener("change", () => {
     state.topic = elements.topic.value;
@@ -626,6 +651,7 @@
     elements.syncCode.value = cleanSyncCode(elements.syncCode.value);
   });
   elements.generateSyncCode.addEventListener("click", generateCode);
+  elements.clearAll.addEventListener("click", clearAllData);
   elements.mobilePanel.addEventListener("click", openSidebar);
   elements.mobilePanelToggle.addEventListener("click", openSidebar);
   elements.closeSidebar.addEventListener("click", closeSidebar);

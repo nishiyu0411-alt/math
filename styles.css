@@ -101,7 +101,7 @@ button:disabled { cursor: not-allowed; opacity: 0.48; }
 .stat strong { display: block; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
 .stat span { display: block; margin-top: 9px; color: var(--muted); font-size: 14px; }
 
-.control-section, .progress-section, .sync-section, .navigator-section {
+.control-section, .progress-section, .sync-section, .navigator-section, .data-section {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
@@ -175,6 +175,17 @@ button:disabled { cursor: not-allowed; opacity: 0.48; }
 .legend i.done { background: var(--purple-soft); border-color: #c9b6ec; }
 .legend i.wrong { background: var(--red-soft); border-color: #e9b4c0; }
 .legend i.current { box-shadow: inset 0 0 0 2px var(--purple); border-color: var(--purple); }
+.danger-button {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d98da0;
+  border-radius: 7px;
+  background: var(--red-soft);
+  color: #9d3951;
+  font-weight: 800;
+}
+.danger-button:hover { background: #ffe3e9; border-color: var(--red); }
+.data-section p { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 
 .quiz-column { min-width: 0; }
 .question-card { min-height: 660px; padding: 28px; }

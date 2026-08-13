@@ -1,4 +1,4 @@
-const CACHE = "violet-math-v4-sync";
+const CACHE = "violet-math-v5-clear-data";
 const ASSETS = ["./", "./index.html", "./styles.css", "./questions.js", "./app.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
