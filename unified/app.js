@@ -8,11 +8,27 @@ function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');
 function fmt(v){let s=Math.max(0,Math.floor(v));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,'0')).join(':')}
 function elapsed(){return state.elapsed+(state.running?(Date.now()-state.lastTick)/1000:0)}
 function save(cloud=true){state.changed=Date.now();localStorage.setItem(KEY,JSON.stringify(state));if(cloud&&state.code){clearTimeout(saveTimer);saveTimer=setTimeout(()=>push(false),900)}}
-const majors=[...new Set(qs.map(q=>q.major))],valid=q=>!q.bad&&!state.flags[q.id];
+const majors=[...new Set(qs.map(q=>q.major))].sort((a,b)=>({ '词汇与综合':0,'逻辑题':1,'数学题':2}[a]??99)-({'词汇与综合':0,'逻辑题':1,'数学题':2}[b]??99));
+if(!majors.includes(state.major))state.major='ALL';if(state.major==='ALL')state.minor='ALL';
+let expandedMajor=state.major==='ALL'?null:state.major;
+const valid=q=>!q.bad&&!state.flags[q.id];
 function list(){return state.order.map(id=>byId.get(id)).filter(q=>q&&(state.major==='ALL'||q.major===state.major)&&(state.minor==='ALL'||q.minor===state.minor)&&(state.mode==='flagged'?(q.bad||state.flags[q.id]):valid(q))&&(state.mode!=='new'||!state.answers[q.id])&&(state.mode!=='wrong'||state.wrongBook[q.id])&&(state.mode!=='favorite'||state.favorites[q.id]))}
 function active(){let a=list();state.index=Math.max(0,Math.min(state.index,a.length-1));return {a,q:a[state.index]}}
-function optionsForMinor(){const vals=[...new Set(qs.filter(q=>state.major==='ALL'||q.major===state.major).map(q=>q.minor))].sort((a,b)=>a.localeCompare(b,'zh-CN'));$('minor').innerHTML='<option value="ALL">全部小类</option>'+vals.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');if(!vals.includes(state.minor))state.minor='ALL';$('minor').value=state.minor}
-function setFilter(){state.index=0;save(false);render()}
+function renderCategories(){
+  const tree=$('categoryTree'),oldPanel=tree.querySelector('.subcat-list'),oldScroll=oldPanel?oldPanel.scrollTop:0;
+  $('categoryAll').classList.toggle('is-selected',state.major==='ALL');
+  $('categoryAll').setAttribute('aria-pressed',String(state.major==='ALL'));
+  $('totalCount').textContent=qs.length+'题';
+  tree.innerHTML=majors.map((m,i)=>{
+    const children=qs.filter(q=>q.major===m),expanded=expandedMajor===m,chosen=state.major===m;
+    const unique=[...new Set(children.map(q=>q.minor))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+    const sub=expanded?'<div class="subcat-list"><button type="button" class="subcat-btn '+(chosen&&state.minor==='ALL'?'is-selected':'')+'" data-minor="ALL">本大类全部题目<span class="subcat-count">'+children.length+'题</span></button>'+
+      unique.map(c=>'<button type="button" class="subcat-btn '+(chosen&&state.minor===c?'is-selected':'')+'" data-minor="'+esc(c)+'">'+esc(c)+'<span class="subcat-count">'+children.filter(q=>q.minor===c).length+'题</span></button>').join('')+'</div>':'';
+    return '<div class="major-group"><button type="button" class="major-btn '+(chosen?'is-selected':'')+'" data-major="'+esc(m)+'" aria-expanded="'+expanded+'"><span class="major-head"><span class="major-icon">'+['✎','◇','∑'][i]+'</span>'+esc(m)+'</span><span class="major-count">'+children.length+'题 <span class="major-chevron">⌄</span></span></button>'+sub+'</div>'
+  }).join('');
+  const panel=tree.querySelector('.subcat-list');if(panel)panel.scrollTop=oldScroll;
+}
+function setFilter(){state.index=0;save(false);renderCategories();render()}
 function stats(){const done=qs.filter(q=>state.answers[q.id]&&valid(q));const correct=done.filter(q=>state.answers[q.id].correct).length;
 $('done').textContent=done.length;$('accuracy').textContent=done.length?Math.round(100*correct/done.length)+'%':'—';$('wrongs').textContent=Object.keys(state.wrongBook).filter(id=>state.wrongBook[id]).length;$('stars').textContent=Object.values(state.favorites).filter(Boolean).length;}
 function render(){stats();const {a,q}=active();$('progresslabel').textContent=a.length?(state.index+1)+' / '+a.length:'0 / 0';$('progressbar').style.width=a.length?100*(state.index+1)/a.length+'%':'0%';$('counter').textContent=a.length?'第 '+(state.index+1)+' / '+a.length+' 题':'';$('crumb').textContent=q?q.major+' / '+q.minor:'选择练习分类';
@@ -45,14 +61,24 @@ const l=JSON.parse(localStorage.getItem('logic_practice_word_layout_v2')||'null'
 const m=JSON.parse(localStorage.getItem('violet_math_308_v4')||'null');if(m){for(const [id,r] of Object.entries(m.answers||{})){let k='m'+id;if(byId.has(k)&&!state.answers[k]){let c=typeof r==='string'?r:r?.choice||r?.selected||'';state.answers[k]={choice:c,correct:c===byId.get(k).answer,at:0}}}for(const [id,v] of Object.entries(m.favorites||{}))if(v)state.favorites['m'+id]=true;for(const [id,v] of Object.entries(m.wrongBook||{}))if(v)state.wrongBook['m'+id]=true}
 }catch(e){}}
 const currentSaved=localStorage.getItem(KEY);if(!currentSaved)importOriginal();
-$('major').innerHTML='<option value="ALL">全部大类</option>'+majors.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');$('major').value=state.major;$('mode').value=state.mode;optionsForMinor();$('syncCode').value=state.code||'';
-$('major').onchange=e=>{state.major=e.target.value;state.minor='ALL';optionsForMinor();setFilter()};
-$('minor').onchange=e=>{state.minor=e.target.value;setFilter()};$('mode').onchange=e=>{state.mode=e.target.value;setFilter()};$('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('favorite').onclick=toggleFav;$('flag').onclick=report;
+$('mode').value=state.mode;$('syncCode').value=state.code||'';
+$('categoryAll').onclick=()=>{state.major='ALL';state.minor='ALL';expandedMajor=null;setFilter()};
+$('categoryTree').onclick=e=>{
+  const btn=e.target.closest('button');if(!btn)return;
+  if(btn.hasAttribute('data-major')){
+    const major=btn.dataset.major,wasOpen=expandedMajor===major;
+    expandedMajor=wasOpen?null:major;
+    state.major=major;state.minor='ALL';setFilter();
+  }else if(btn.hasAttribute('data-minor')){
+    state.minor=btn.dataset.minor;setFilter();
+  }
+};
+$('mode').onchange=e=>{state.mode=e.target.value;setFilter()};$('prev').onclick=()=>move(-1);$('next').onclick=()=>move(1);$('favorite').onclick=toggleFav;$('flag').onclick=report;
 $('shuffle').onclick=()=>{for(let i=state.order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[state.order[i],state.order[j]]=[state.order[j],state.order[i]]}setFilter();toast('已打乱题目顺序')};$('resetOrder').onclick=()=>{state.order=qs.map(q=>q.id);setFilter()};
 $('togglePanel').onclick=()=>{$('panel').classList.toggle('open')};$('timerBtn').onclick=()=>{if(state.running){state.elapsed=elapsed();state.running=false}else{state.lastTick=Date.now();state.running=true}$('timerBtn').textContent=state.running?'暂停计时':'继续计时';save(false)};
 $('sync').onclick=synchronize;$('generate').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);const code=Array.from(a,x=>x.toString(16).padStart(2,'0')).join('');$('syncCode').value=code;toast('已生成同步码，请妥善保存并点击同步')};
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='诗雨刷题进度-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)};
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d||!d.answers)throw Error('存档格式不正确');if(d.order&&d.order.length===308&&d.completed){const trans={answers:{},favorites:{},wrongBook:{}};for(const [id,v] of Object.entries(d.answers||{})){const k='m'+id,c=typeof v==='string'?v:(v?.choice||v?.selected||'');if(byId.has(k))trans.answers[k]={choice:c,correct:c===byId.get(k).answer,at:0}}for(const [id,v] of Object.entries(d.favorites||{}))if(v)trans.favorites['m'+id]=true;for(const [id,v] of Object.entries(d.wrongBook||{}))if(v)trans.wrongBook['m'+id]=true;state=merge(state,trans)}else if(d.order&&d.order.length===170){const trans={answers:{},favorites:{},wrongBook:{}};for(const [id,v] of Object.entries(d.answers||{})){const k='l'+id;if(byId.has(k)&&v.submitted)trans.answers[k]={choice:(v.selected||[])[0]||'',correct:v.isCorrect,at:0}}for(const [id,v] of Object.entries(d.favorites||{}))if(v)trans.favorites['l'+id]=true;for(const [id,v] of Object.entries(d.wrongBook||{}))if(v)trans.wrongBook['l'+id]=true;state=merge(state,trans)}else if(d.order&&d.order.length===207){const trans={answers:{},favorites:{},wrongBook:{}};for(const [id,v] of Object.entries(d.answers||{})){const k='w'+id;if(byId.has(k))trans.answers[k]={choice:v.choice,correct:v.correct,at:0}}for(const [id,v] of Object.entries(d.favorites||{}))if(v)trans.favorites['w'+id]=true;for(const [id,v] of Object.entries(d.wrongBook||{}))if(v)trans.wrongBook['w'+id]=true;state=merge(state,trans)}else state=merge(state,d);state.index=0;save();render();toast('存档已合并导入')}catch(err){toast(err.message)}e.target.value=''};
 document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)||e.ctrlKey||e.altKey||e.metaKey||e.repeat)return;if('1234'.includes(e.key)&&e.key.length===1){const {q}=active();if(q){e.preventDefault();answer('ABCD'[Number(e.key)-1])}}else if(e.code==='Space'){e.preventDefault();toggleFav()}else if(e.key==='ArrowRight'){e.preventDefault();move(1)}else if(e.key==='ArrowLeft'){e.preventDefault();move(-1)}});
-setInterval(()=>$('clock').textContent='◷ '+fmt(elapsed()),500);window.addEventListener('pagehide',()=>{localStorage.setItem(KEY,JSON.stringify(state))});render();if(state.code)fetchRemote(state.code).then(r=>{if(r){state=merge(state,r.state||{});localStorage.setItem(KEY,JSON.stringify(state));render();cloudStatus('已载入云端历史进度')}}).catch(()=>cloudStatus('当前离线，进度保存在本机'));
+setInterval(()=>$('clock').textContent='◷ '+fmt(elapsed()),500);window.addEventListener('pagehide',()=>{localStorage.setItem(KEY,JSON.stringify(state))});renderCategories();render();if(state.code)fetchRemote(state.code).then(r=>{if(r){state=merge(state,r.state||{});localStorage.setItem(KEY,JSON.stringify(state));render();cloudStatus('已载入云端历史进度')}}).catch(()=>cloudStatus('当前离线，进度保存在本机'));
 })();
